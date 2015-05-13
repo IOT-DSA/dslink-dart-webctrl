@@ -48,7 +48,8 @@ class WebCtrlClient {
 </soapenv:Envelope>
     """;
 
-    x = x.replaceAll("{{DATA}}", paths.map((it) => '<expression xsi:type="xsd:string" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">${it}</expression>').join());
+    x = x.replaceAll("{{DATA}}", paths.map((it) =>
+      '<expression xsi:type="xsd:string" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">${it}</expression>').join());
     return await request("Eval", x);
   }
 

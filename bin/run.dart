@@ -171,7 +171,7 @@ class RefreshActionNode extends SimpleNode {
   }
 }
 
-class ProxyNode extends LocalNodeImpl {
+class ProxyNode extends SimpleNode {
   ProxyNode(String path) : super(path) {
     updateFunction = () {
       if (myConn == null) {
@@ -292,6 +292,10 @@ class ProxyNode extends LocalNodeImpl {
       x = x.substring(0, x.length - 1);
     }
 
+    if (x.startsWith("//")) {
+      x = x.substring(1);
+    }
+
     conn.client.getChildren(x).then((c) async {
       var fullPaths = c.map((it) {
         var s = "${x == "/" ? "" : x}/${it}";
@@ -348,8 +352,6 @@ class ConnectionNode extends ProxyNode {
       initialize(this);
     }
   }
-
-  void onLoadChild(x, y, z) {}
 
   String get rootPrefix => get(r"$$webctrl_root");
 }
