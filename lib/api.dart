@@ -61,7 +61,17 @@ class WebCtrlClient {
     var i = 0;
     var map = {};
     for (XmlElement child in e.children.where((it) => it is XmlElement)) {
-      var val = resolveStringValue(child.text);
+      var isNullAttr = child.attributes.firstWhere((it) => it.name.local == "nil", orElse: () => null);
+      var isNull = false;
+      if (isNullAttr != null && isNullAttr.value == "true") {
+        isNull = true;
+      }
+      dynamic val;
+      if (isNull) {
+        val = null;
+      } else {
+        val = resolveStringValue(child.text);
+      }
       map[paths[i]] = val;
       i++;
     }
@@ -91,7 +101,6 @@ class WebCtrlClient {
   }
 
   Future<List<String>> getChildrenRecursive(String path) async {
-    print("Get ${path}");
     var list = [];
     var c = await getChildren(path);
     list.addAll(c);
