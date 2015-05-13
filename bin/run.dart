@@ -101,6 +101,7 @@ class ProxyNodeProvider extends SimpleNodeProvider {
     pnode.children[mp.name] = node;
     pnode.updateList(mp.name);
     nodes[path] = node;
+    node.onCreated();
     return node;
   }
 }
@@ -203,14 +204,19 @@ class ProxyNode extends SimpleNode {
         print(stack);
       });
     };
+  }
 
-/*    link.addNode("${path}/Refresh", {
-      r"$is": "refresh",
-      r"$invokable": "write",
-      r"$result": "values",
-      r"$params": [],
-      r"$columns": []
-    });*/
+  @override
+  void onCreated() {
+    if (!children.containsKey("Refresh")) {
+      link.addNode("${path}/Refresh", {
+        r"$is": "refresh",
+        r"$invokable": "write",
+        r"$result": "values",
+        r"$params": [],
+        r"$columns": []
+      });
+    }
   }
 
   void refresh() {
@@ -343,7 +349,10 @@ class ConnectionNode extends ProxyNode {
     onCreated();
   }
 
+  @override
   void onCreated() {
+    super.onCreated();
+
     client = new WebCtrlClient(get(r"$$webctrl_url"), get(r"$$webctrl_username"), get(r"$$webctrl_password"));
     if (!initialized) {
       for (var c in children.keys) {
