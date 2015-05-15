@@ -117,6 +117,8 @@ class CreateConnectionNode extends SimpleNode {
     var password = params["password"];
     var root = params["root"];
 
+    if (root == null) root = "/";
+
     if (!url.contains("_common/webservices")) {
       if (url[url.length - 1] == "/") {
         url = "${url}_common/webservices/";
@@ -152,6 +154,14 @@ class CreateConnectionNode extends SimpleNode {
           }
         ],
         r"$is": "getValue"
+      },
+      "Delete_Connection": {
+        r"$invokable": "write",
+        r"$name": "Delete Connection",
+        r"$params": [],
+        r"$result": "values",
+        r"$columns": [],
+        r"$is": "deleteParent"
       }
     });
     ConnectionNode n = link.getNode("/${params["name"]}");
