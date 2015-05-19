@@ -101,6 +101,28 @@ class WebCtrlClient {
     return e.children.where((it) => it is XmlElement).map((it) => it.text).toList();
   }
 
+  Future setValue(String path, dynamic value) async {
+    var v = toStringValue(value);
+    if (v != null) {
+      v = escapeXml(v);
+    }
+
+    var x = """
+<soapenv:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:soap="http://soap.core.green.controlj.com">
+  <soapenv:Header/>
+  <soapenv:Body>
+    <soap:setValue soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+      <expression xsi:type="xsd:string">${path}</expression>
+      <newValue xsi:type="xsd:string">${v}</newValue>
+      <changeReason xsi:type="xsd:string">dglux</changeReason>
+    </soap:setValue>
+  </soapenv:Body>
+</soapenv:Envelope>
+    """;
+
+    return await request("Eval", x);
+  }
+
   Future<List<String>> getChildrenRecursive(String path) async {
     var list = [];
     var c = await getChildren(path);
@@ -124,6 +146,20 @@ class WebCtrlClient {
   }
 }
 
+String toStringValue(input) {
+  if (input == null) return null;
+
+  if (input is Map || input is List) {
+    return JSON.encode(input);
+  } else if (input is String) {
+    return input;
+  } else if (input is bool || input is num) {
+    return input.toString();
+  } else {
+    throw new Exception("Invalid Input");
+  }
+}
+
 dynamic resolveStringValue(String input) {
   var n = num.parse(input, (x) => null);
   if (n != null) {
@@ -137,6 +173,15 @@ dynamic resolveStringValue(String input) {
   }
 
   return input;
+}
+
+String escapeXml(String input) {
+  return input
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll("&", "&amp;");
 }
 
 String _createBasicAuthorization(String username, String password) {

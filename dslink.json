@@ -1,0 +1,17 @@
+{
+  "name": "webctrl",
+  "version": "1.0.0",
+  "description": "WebCtrl DSLink",
+  "main": "bin/run.dart",
+  "engines": {
+    "dart": ">=1.9.0"
+  },
+  "getDependencies": [
+    "pub get"
+  ],
+  "configs": {
+    "broker": {
+      "type": "url"
+    }
+  }
+}

@@ -52,6 +52,39 @@ main(List<String> args) async {
         "value": await n.client.queryValue(params["name"])
       };
     }),
+    "setValue": (String path) => new SimpleActionNode(path, (params) async {
+      var value = params["value"];
+      var t = new Path(path).parentPath;
+      ConnectionNode n = link.provider.getNode(t);
+
+      var success = false;
+
+      var x = path.split("/").skip(2).join("/");
+
+      x = "${n.rootPrefix}/${x}";
+
+      if (x == "") {
+        x = "/";
+      }
+
+      if (!x.startsWith("/")) {
+        x = "/${x}";
+      }
+
+      if (x.endsWith("/")) {
+        x = x.substring(0, x.length - 1);
+      }
+
+      try {
+        await n.client.setValue(x, value);
+        success = true;
+      } catch (e) {
+      }
+
+      return {
+        "success": success
+      };
+    }),
     "refresh": (String path) => new RefreshActionNode(path)
   });
 
@@ -226,6 +259,34 @@ class ProxyNode extends SimpleNode {
         r"$params": [],
         r"$columns": []
       });
+    }
+  }
+
+  void addSettableIfNotExists() {
+    if (!children.containsKey("Set_Value")) {
+      link.addNode("${path}/Set_Value", {
+        r"$is": "setValue",
+        r"$invokable": "write",
+        r"$result": "values",
+        r"$params": [
+          {
+            "name": "value",
+            "type": "dynamic"
+          }
+        ],
+        r"$columns": [
+          {
+            "name": "success",
+            "type": "bool"
+          }
+        ]
+      });
+    }
+  }
+
+  void removeSettable() {
+    if (children.containsKey("Set_Value")) {
+      removeChild("Set_Value");
     }
   }
 
