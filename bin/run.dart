@@ -97,7 +97,13 @@ main(List<String> args) async {
 
   link.connect();
 
-  timer = new Timer.periodic(new Duration(seconds: 5), (_) {
+  startTimer();
+}
+
+Duration interval = new Duration(seconds: 3);
+
+void startTimer() {
+  timer = new Timer.periodic(interval, (_) {
     for (var x in updateFunctions) {
       x();
     }
