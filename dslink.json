@@ -1,5 +1,5 @@
 {
-  "name": "webctrl",
+  "name": "dslink-dart-webctrl",
   "version": "1.0.0",
   "description": "WebCtrl DSLink",
   "main": "bin/run.dart",
