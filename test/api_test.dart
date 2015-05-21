@@ -7,7 +7,7 @@ main() async {
   var config = JSON.decode(await file.readAsString());
   var client = new WebCtrlClient(config["url"], config["username"], config["password"]);
 
-  var children = await client.getChildren(config["root"]);
-  print(children);
-  print(await client.queryValue("/"));
+  var root = config["root"];
+
+  print(await client.getTrendData("/#vav_ahu1/sf_status"));
 }

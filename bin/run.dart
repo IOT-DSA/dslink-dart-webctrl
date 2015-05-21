@@ -32,11 +32,6 @@ main(List<String> args) async {
         {
           "name": "password",
           "type": "string"
-        },
-        {
-          "name": "root",
-          "type": "string",
-          "default": "/"
         }
       ],
       r"$is": "createConnection"
@@ -51,6 +46,8 @@ main(List<String> args) async {
       return {
         "value": await n.client.queryValue(params["name"])
       };
+    })..configs.addAll({
+      r"$name": "Get Value"
     }),
     "setValue": (String path) => new SimpleActionNode(path, (params) async {
       var value = params["value"];
@@ -61,7 +58,7 @@ main(List<String> args) async {
 
       var x = path.split("/").skip(2).join("/");
 
-      x = "${n.rootPrefix}/${x}";
+      x = "/${x}";
 
       if (x == "") {
         x = "/";
@@ -122,7 +119,7 @@ class ProxyNodeProvider extends SimpleNodeProvider {
     var connections = nodes.values.where((it) => it is ConnectionNode).toList();
     var c = connections.firstWhere((it) => path.startsWith(it.path), orElse: () => null);
 
-    if (c == null || path.replaceAll(c.path + "/", "") == "Get_Value") {
+    if (c == null || ["Get_Value", "Set_Value", "getHistory"].any((it) => path.endsWith(it))) {
       return super.getNode(path);
     }
 
@@ -230,11 +227,7 @@ class ProxyNode extends SimpleNode {
 
       var x = path.split("/").skip(2).join("/");
 
-      x = "${myConn.rootPrefix}/${x}";
-
-      if (x == "") {
-        x = "/";
-      }
+      x = "/${x}";
 
       if (!x.startsWith("/")) {
         x = "/${x}";
@@ -244,9 +237,16 @@ class ProxyNode extends SimpleNode {
         x = x.substring(0, x.length - 1);
       }
 
+      if (x == "") {
+        x = "/";
+      }
+
       myConn.client.queryValue(x).then((value) {
         if (value != null) {
           updateValue(value);
+          addSettableIfNotExists();
+        } else {
+          removeSettable();
         }
       }).catchError((e, stack) {
         print(e);
@@ -361,7 +361,7 @@ class ProxyNode extends SimpleNode {
 
     var x = path.split("/").skip(2).join("/");
 
-    x = "${conn.rootPrefix}/${x}";
+    x = "/${x}";
 
     if (x == "") {
       x = "/";
@@ -379,6 +379,10 @@ class ProxyNode extends SimpleNode {
       x = x.substring(1);
     }
 
+    if (x == "") {
+      x = "/";
+    }
+    
     conn.client.getChildren(x).then((c) async {
       var fullPaths = c.map((it) {
         var s = "${x == "/" ? "" : x}/${it}";
@@ -396,6 +400,7 @@ class ProxyNode extends SimpleNode {
         var node = link["${prefix}${p}"];
         if (value != null) {
           node.configs[r"$type"] = "dynamic";
+          node.children["getHistory"] = _getHistoryNode;
           node.updateValue(value);
         }
       }
@@ -403,6 +408,44 @@ class ProxyNode extends SimpleNode {
       print(e);
       print(stack);
     });
+  }
+
+  @override
+  InvokeResponse invoke(Map params, Responder responder, InvokeResponse response) {
+    List paths = path.split('/');
+    var p = path.split("/").take(2).join("/");
+    var x = path.split("/").skip(2).join("/");
+    ConnectionNode conn = link[p];
+    String actName = paths.removeLast();
+
+    x = "/${x}";
+
+    if (x == "") {
+      x = "/";
+    }
+
+    if (!x.startsWith("/")) {
+      x = "/${x}";
+    }
+
+    if (x.endsWith("/")) {
+      x = x.substring(0, x.length - 1);
+    }
+
+    if (x.startsWith("//")) {
+      x = x.substring(1);
+    }
+    if (actName == "getHistory") {
+      conn.client.getTrendData(x).then((results) {
+        print(results);
+        response.updateStream([], streamStatus: StreamStatus.closed);
+      }).catchError((e) {
+        response.updateStream([], streamStatus: StreamStatus.closed);
+      });
+      return response;
+    } else {
+      return super.invoke(params, responder, response);
+    }
   }
 }
 
@@ -438,6 +481,6 @@ class ConnectionNode extends ProxyNode {
       initialize(this);
     }
   }
-
-  String get rootPrefix => get(r"$$webctrl_root");
 }
+
+SimpleNode _getHistoryNode = new SimpleNode('/')..load({r'$is':'getHistory', r'$invokable':'read'}, null);
