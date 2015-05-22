@@ -74,7 +74,10 @@ class WebCtrlClient {
     try {
       response = await request("Trend", x);
       XmlElement e = response.findAllElements("getTrendDataReturn").first;
-      print(e);
+      var list = [];
+      for (var x in e.children) {
+
+      }
     } catch (e) {
       if (e.toString().contains("Trends are not enabled")) {
         throw new Exception("Trends are not enabled for this node.");
@@ -193,6 +196,10 @@ String toStringValue(input) {
 }
 
 dynamic resolveStringValue(String input) {
+  if (input.startsWith("[ERROR]: Device is temporarily disabled.")) {
+    return null;
+  }
+
   var n = num.parse(input, (x) => null);
   if (n != null) {
     return n;

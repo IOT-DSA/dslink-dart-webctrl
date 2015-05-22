@@ -382,7 +382,7 @@ class ProxyNode extends SimpleNode {
     if (x == "") {
       x = "/";
     }
-    
+
     conn.client.getChildren(x).then((c) async {
       var fullPaths = c.map((it) {
         var s = "${x == "/" ? "" : x}/${it}";
@@ -397,10 +397,10 @@ class ProxyNode extends SimpleNode {
       var prefix = path.split("/").take(2).join("/");
       for (var p in fullPaths) {
         var value = values[p];
-        var node = link["${prefix}${p}"];
+        ProxyNode node = link["${prefix}${p}"];
         if (value != null) {
           node.configs[r"$type"] = "dynamic";
-          node.children["getHistory"] = _getHistoryNode;
+          node.addHistoryAction();
           node.updateValue(value);
         }
       }
@@ -410,13 +410,29 @@ class ProxyNode extends SimpleNode {
     });
   }
 
+  void addHistoryAction() {
+    if (!children.containsKey("getHistory")) {
+      var n = new GetHistoryNode("${path}/getHistory");
+      addChild("getHistory", n);
+      (link.provider as ProxyNodeProvider).nodes[n.path] = n;
+      updateList("getHistory");
+    }
+  }
+}
+
+class GetHistoryNode extends SimpleNode {
+  GetHistoryNode(String path) : super(path) {
+    configs[r"$is"] = "getHistory";
+    configs[r"$name"] = "Get History";
+    configs[r"$invokable"] = "read";
+  }
+
   @override
-  InvokeResponse invoke(Map params, Responder responder, InvokeResponse response) {
-    List paths = path.split('/');
+  onInvoke(Map<String, dynamic> params) async {
     var p = path.split("/").take(2).join("/");
     var x = path.split("/").skip(2).join("/");
+    x = x.substring(0, x.length - 11);
     ConnectionNode conn = link[p];
-    String actName = paths.removeLast();
 
     x = "/${x}";
 
@@ -435,16 +451,12 @@ class ProxyNode extends SimpleNode {
     if (x.startsWith("//")) {
       x = x.substring(1);
     }
-    if (actName == "getHistory") {
-      conn.client.getTrendData(x).then((results) {
-        print(results);
-        response.updateStream([], streamStatus: StreamStatus.closed);
-      }).catchError((e) {
-        response.updateStream([], streamStatus: StreamStatus.closed);
-      });
-      return response;
-    } else {
-      return super.invoke(params, responder, response);
+
+    try {
+      var results = await conn.client.getTrendData(x);
+      return [];
+    } catch (e) {
+      return [];
     }
   }
 }
@@ -482,5 +494,3 @@ class ConnectionNode extends ProxyNode {
     }
   }
 }
-
-SimpleNode _getHistoryNode = new SimpleNode('/')..load({r'$is':'getHistory', r'$invokable':'read'}, null);
