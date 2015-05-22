@@ -429,6 +429,17 @@ class GetHistoryNode extends SimpleNode {
 
   @override
   onInvoke(Map<String, dynamic> params) async {
+    String range = params["Timerange"];
+    Duration interval = parseInterval(params["Interval"]);
+
+    DateTime start;
+    DateTime end;
+    if (range != null) {
+      List<String> l = range.split("/");
+      start = DateTime.parse(l[0]);
+      end = DateTime.parse(l[1]);
+    }
+
     var p = path.split("/").take(2).join("/");
     var x = path.split("/").skip(2).join("/");
     x = x.substring(0, x.length - 11);
@@ -453,8 +464,36 @@ class GetHistoryNode extends SimpleNode {
     }
 
     try {
-      var results = await conn.client.getTrendData(x);
-      return [];
+      var results = await conn.client.getTrendData(x, start: start, end: end);
+      var list = [];
+
+      int lastTimestamp = -1;
+      int timestamp;
+
+      for (List<dynamic> x in results) {
+        DateTime time = x[0];
+        timestamp = time.millisecondsSinceEpoch;
+
+        if ((lastTimestamp < 0) && (timestamp < lastTimestamp)) {
+          continue;
+        }
+
+        if (interval != null && interval.inMilliseconds != 0) {
+          var diff = timestamp - lastTimestamp;
+          if (diff < interval.inMilliseconds) {
+            continue;
+          }
+          lastTimestamp = timestamp;
+          list.add(x);
+        } else {
+          list.add(x);
+        }
+      }
+
+      return list.map((it) => {
+        "Ts": "${it[0].toIso8601String()}${ValueUpdate.TIME_ZONE}",
+        "Value": it[1]
+      }).toList();
     } catch (e) {
       return [];
     }

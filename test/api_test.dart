@@ -7,12 +7,5 @@ main() async {
   var config = JSON.decode(await file.readAsString());
   var client = new WebCtrlClient(config["url"], config["username"], config["password"]);
 
-  var children = await client.getChildren("/#vav_ahu1");
-
-  for (var x in children) {
-    try {
-      print(await client.getTrendData("/#vav_ahu1/${x}"));
-    } catch (e) {
-    }
-  }
+  print(await client.getTrendData("/trees/geographic/#utility_report/total_rtu_cfm_trn/~trend"));
 }

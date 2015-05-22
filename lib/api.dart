@@ -75,9 +75,12 @@ class WebCtrlClient {
       response = await request("Trend", x);
       XmlElement e = response.findAllElements("getTrendDataReturn").first;
       var list = [];
-      for (var x in e.children) {
-
+      for (var i = 0; i < e.children.length; i += 2) {
+        var lts = e.children[i].text;
+        var lv = e.children[i + 1].text;
+        list.add([parseWebCtrlDate(lts), resolveStringValue(lv)]);
       }
+      return list;
     } catch (e) {
       if (e.toString().contains("Trends are not enabled")) {
         throw new Exception("Trends are not enabled for this node.");
@@ -259,6 +262,10 @@ String _createBasicAuthorization(String username, String password) {
 }
 
 Duration parseInterval(String name) {
+  if (name == null) {
+    return INTERVALS["none"];
+  }
+
   var x = INTERVALS[name];
   return x == null ? INTERVALS["default"] : x;
 }
