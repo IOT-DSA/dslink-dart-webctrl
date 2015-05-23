@@ -491,8 +491,8 @@ class GetHistoryNode extends SimpleNode {
       }
 
       return list.map((it) => {
-        "Ts": "${it[0].toIso8601String()}${ValueUpdate.TIME_ZONE}",
-        "Value": it[1]
+        "ts": "${it[0].toIso8601String()}${ValueUpdate.TIME_ZONE}",
+        "value": it[1]
       }).toList();
     } catch (e) {
       return [];
