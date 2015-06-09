@@ -271,6 +271,7 @@ class ProxyNode extends SimpleNode {
   void addSettableIfNotExists() {
     if (!children.containsKey("Set_Value")) {
       link.addNode("${path}/Set_Value", {
+        r"$name": "Set",
         r"$is": "setValue",
         r"$invokable": "write",
         r"$result": "values",
@@ -515,7 +516,7 @@ class ConnectionNode extends ProxyNode {
   ConnectionNode(String path) : super(path);
 
   @override
-  void load(Map m, NodeProviderImpl provider) {
+  void load(Map m, [NodeProviderImpl provider]) {
     super.load(m, provider);
     onCreated();
   }
