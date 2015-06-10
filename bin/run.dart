@@ -97,7 +97,7 @@ main(List<String> args) async {
   startTimer();
 }
 
-Duration interval = new Duration(seconds: 3);
+Duration interval = new Duration(seconds: 1);
 
 void startTimer() {
   timer = new Timer.periodic(interval, (_) {
@@ -249,8 +249,6 @@ class ProxyNode extends SimpleNode {
           removeSettable();
         }
       }).catchError((e, stack) {
-        print(e);
-        print(stack);
       });
     };
   }
@@ -406,8 +404,6 @@ class ProxyNode extends SimpleNode {
         }
       }
     }).catchError((e, stack) {
-      print(e);
-      print(stack);
     });
   }
 
