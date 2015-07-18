@@ -4,6 +4,7 @@ import "package:dslink_webctrl/api.dart";
 
 import "package:dslink/dslink.dart";
 import "package:dslink/nodes.dart";
+import "package:dslink/utils.dart" show BroadcastStreamController;
 
 LinkProvider link;
 
@@ -11,6 +12,14 @@ Timer timer;
 
 main(List<String> args) async {
   var np = new ProxyNodeProvider();
+
+  link = new LinkProvider(
+      args,
+      "WebCtrl-",
+      provider: np,
+      autoInitialize: false
+  );
+
   np.init({
     "Create_Connection": {
       r"$name": "Create Connection",
@@ -19,11 +28,13 @@ main(List<String> args) async {
       r"$params": [
         {
           "name": "name",
-          "type": "string"
+          "type": "string",
+          "placeholder": "MyConnection"
         },
         {
           "name": "url",
-          "type": "string"
+          "type": "string",
+          "placeholder": ""
         },
         {
           "name": "username",
@@ -46,7 +57,7 @@ main(List<String> args) async {
       return {
         "value": await n.client.queryValue(params["name"])
       };
-    })..configs.addAll({
+    }, link.provider)..configs.addAll({
       r"$name": "Get Value"
     }),
     "setValue": (String path) => new SimpleActionNode(path, (params) async {
@@ -81,17 +92,11 @@ main(List<String> args) async {
       return {
         "success": success
       };
-    }),
+    }, link.provider),
     "refresh": (String path) => new RefreshActionNode(path)
   });
 
-  link = new LinkProvider(
-    args,
-    "WebCtrl-",
-    nodeProvider: np,
-    provider: np
-  );
-
+  link.init();
   link.connect();
 
   startTimer();
@@ -110,9 +115,7 @@ void startTimer() {
 List<Function> updateFunctions = [];
 
 class ProxyNodeProvider extends SimpleNodeProvider {
-  ProxyNodeProvider([Map m, Map profiles]) {
-    init(m, profiles);
-  }
+  ProxyNodeProvider([Map m, Map profiles]) : super(m, profiles);
 
   @override
   LocalNode getNode(String path) {
@@ -128,87 +131,113 @@ class ProxyNodeProvider extends SimpleNodeProvider {
     }
 
     if (nodes.containsKey(path)) {
-      return super.getNode(path);
+      return nodes[path];
     }
 
-    var mp = new Path(path);
-    ProxyNode node = new ProxyNode(path);
-    ProxyNode pnode = link[mp.parentPath];
-    pnode.children[mp.name] = node;
-    pnode.updateList(mp.name);
-    nodes[path] = node;
-    node.onCreated();
+    return null;
+  }
+
+  @override
+  LocalNode getOrCreateNode(String path, [bool addToTree = true]) {
+    var node = getNode(path);
+
+    if (node == null) {
+      var mp = new Path(path);
+
+      if (mp.isRoot || mp.path == "/sys" || mp.path == "/defs") {
+        return super.getOrCreateNode(path, addToTree);
+      }
+
+      node = new ProxyNode(path, this);
+      SimpleNode pnode = getNode(mp.parentPath, addToTree);
+
+      if (pnode != null) {
+        pnode.children[p.name] = node;
+        pnode.onChildAdded(p.name, node);
+        pnode.updateList(p.name);
+      }
+
+      if (addToTree) {
+        nodes[path] = node;
+      }
+      node.onCreated();
+    }
+
     return node;
   }
 }
 
 class CreateConnectionNode extends SimpleNode {
-  CreateConnectionNode(String path) : super(path);
+  CreateConnectionNode(String path) : super(path, link.provider);
 
   @override
   onInvoke(Map<String, dynamic> params) {
-    var name = params["name"];
-    var url = params["url"];
-    var user = params["username"];
-    var password = params["password"];
-    var root = params["root"];
+    try {
+      var name = params["name"];
+      var url = params["url"];
+      var user = params["username"];
+      var password = params["password"];
+      var root = params["root"];
 
-    if (root == null) root = "/";
+      if (root == null) root = "/";
 
-    if (!url.contains("_common/webservices")) {
-      if (url[url.length - 1] == "/") {
-        url = "${url}_common/webservices/";
-      } else {
-        url = "${url}/_common/webservices/";
+      if (!url.contains("_common/webservices")) {
+        if (url[url.length - 1] == "/") {
+          url = "${url}_common/webservices/";
+        } else {
+          url = "${url}/_common/webservices/";
+        }
       }
-    }
 
-    if (!url.endsWith("/")) {
-      url = "${url}/";
-    }
-
-    link.addNode("/${name}", {
-      r"$is": "connection",
-      r"$$webctrl_url": url,
-      r"$$webctrl_username": user,
-      r"$$webctrl_password": password,
-      r"$$webctrl_root": root,
-      "Get_Value": {
-        r"$invokable": "read",
-        r"$name": "Get Value",
-        r"$params": [
-          {
-            "name": "name",
-            "type": "string"
-          }
-        ],
-        r"$result": "values",
-        r"$columns": [
-          {
-            "name": "value",
-            "type": "dynamic"
-          }
-        ],
-        r"$is": "getValue"
-      },
-      "Delete_Connection": {
-        r"$invokable": "write",
-        r"$name": "Delete Connection",
-        r"$params": [],
-        r"$result": "values",
-        r"$columns": [],
-        r"$is": "deleteParent"
+      if (!url.endsWith("/")) {
+        url = "${url}/";
       }
-    });
-    ConnectionNode n = link.getNode("/${params["name"]}");
-    link.save();
-    n.onCreated();
-    return {};
+
+      link.addNode("/${name}", {
+        r"$is": "connection",
+        r"$$webctrl_url": url,
+        r"$$webctrl_username": user,
+        r"$$webctrl_password": password,
+        r"$$webctrl_root": root,
+        "Get_Value": {
+          r"$invokable": "read",
+          r"$name": "Get Value",
+          r"$params": [
+            {
+              "name": "name",
+              "type": "string"
+            }
+          ],
+          r"$result": "values",
+          r"$columns": [
+            {
+              "name": "value",
+              "type": "dynamic"
+            }
+          ],
+          r"$is": "getValue"
+        },
+        "Delete_Connection": {
+          r"$invokable": "write",
+          r"$name": "Delete Connection",
+          r"$params": [],
+          r"$result": "values",
+          r"$columns": [],
+          r"$is": "deleteParent"
+        }
+      });
+      ConnectionNode n = link.getNode("/${params["name"]}");
+      link.save();
+      n.onCreated();
+      return {};
+    } catch (e) {
+      print(e);
+    }
   }
 }
 
 class RefreshActionNode extends SimpleNode {
-  RefreshActionNode(String path) : super(path);
+  RefreshActionNode(String path) : super(path, link.provider);
 
   @override
   onInvoke(Map<String, dynamic> params) {
@@ -219,7 +248,7 @@ class RefreshActionNode extends SimpleNode {
 }
 
 class ProxyNode extends SimpleNode {
-  ProxyNode(String path) : super(path) {
+  ProxyNode(String path, [SimpleNodeProvider p]) : super(path, p == null ? link.provider : p) {
     updateFunction = () {
       if (myConn == null) {
         return;
@@ -302,14 +331,30 @@ class ProxyNode extends SimpleNode {
     initialize(this is ConnectionNode ? this : null);
   }
 
-  @override
-  bool get listReady {
-    if (!initialized) {
-      initialize();
-      return false;
+  BroadcastStreamController<String> _listChangeController;
+
+  BroadcastStreamController<String> get listChangeController {
+    if (_listChangeController == null) {
+      _listChangeController = new BroadcastStreamController<String>(
+          onStartListListen, _onAllListCancel);
     }
-    return true;
+    return _listChangeController;
   }
+
+  void onStartListListen() {
+    _listing = true;
+    initialize();
+  }
+
+  bool _listing = false;
+
+  void _onAllListCancel() {
+    _listing = false;
+    listReady = false;
+  }
+
+  Stream<String> get listStream => listChangeController.stream;
+  StreamSubscription _listReqListener;
 
   bool initialized = false;
 
@@ -404,6 +449,7 @@ class ProxyNode extends SimpleNode {
         }
       }
     }).catchError((e, stack) {
+      print(e);
     });
   }
 
@@ -418,7 +464,7 @@ class ProxyNode extends SimpleNode {
 }
 
 class GetHistoryNode extends SimpleNode {
-  GetHistoryNode(String path) : super(path) {
+  GetHistoryNode(String path) : super(path, link.provider) {
     configs[r"$is"] = "getHistory";
     configs[r"$name"] = "Get History";
     configs[r"$invokable"] = "read";
@@ -427,7 +473,7 @@ class GetHistoryNode extends SimpleNode {
   @override
   onInvoke(Map<String, dynamic> params) async {
     String range = params["Timerange"];
-    Duration interval = parseInterval(params["Interval"]);
+    Duration interval = parseIntervalDuration(params["Interval"]);
 
     DateTime start;
     DateTime end;
@@ -500,25 +546,26 @@ class GetHistoryNode extends SimpleNode {
 class ConnectionNode extends ProxyNode {
   WebCtrlClient client;
 
-  @override
-  bool get listReady {
-    if (!initialized) {
-      initialize(this);
-      return false;
-    }
-    return true;
-  }
-
   ConnectionNode(String path) : super(path);
 
   @override
-  void load(Map m, [NodeProviderImpl provider]) {
-    super.load(m, provider);
+  void load(Map m) {
+    super.load(m);
     onCreated();
   }
 
   @override
+  void onStartListListen() {
+    _listing = true;
+    initialize(this);
+  }
+
+  @override
   void onCreated() {
+    if (client != null) {
+      return;
+    }
+
     super.onCreated();
 
     client = new WebCtrlClient(get(r"$$webctrl_url"), get(r"$$webctrl_username"), get(r"$$webctrl_password"));

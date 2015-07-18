@@ -21,6 +21,7 @@ class WebCtrlClient {
       xmlData = (xmlData as XmlNode).toXmlString();
     }
 
+    print("REQ");
     var response = await client.post("${url}/${action}", headers: {
       "Authorization": "Basic ${auth}",
       "SOAPAction": "",
@@ -261,35 +262,50 @@ String _createBasicAuthorization(String username, String password) {
   return CryptoUtils.bytesToBase64(UTF8.encode("${username}:${password}"));
 }
 
-Duration parseInterval(String name) {
-  if (name == null) {
-    return INTERVALS["none"];
+final Map<dynamic, int> TYPES = {
+  ["ms", "millis", "millisecond", "milliseconds"]: 1,
+  ["s", "second", "seconds"]: 1000,
+  ["m", "min", "minute", "minutes"]: 60000,
+  ["h", "hr", "hour", "hours"]: 3600000,
+  ["d", "day", "days"]: 86400000,
+  ["w", "wk", "week", "weeks"]: 604800000,
+  ["month", "months"]: 2628000000,
+  ["y", "year", "years"]: 31536000000
+};
+
+final List<String> ALL_TYPES = TYPES.keys.expand((key) => key).toList()..sort();
+final RegExp INTERVAL_REGEX = new RegExp("^(\\d*?.?\\d*?)(${ALL_TYPES.join('|')})\$");
+
+Duration parseIntervalDuration(String input) =>
+  new Duration(milliseconds: parseInterval(input));
+
+int parseInterval(String input) {
+  /// Sanitize Input
+  input = input.trim().toLowerCase().replaceAll(" ", "");
+
+  if (input == "default" || input == "none") {
+    return 0;
   }
 
-  var x = INTERVALS[name];
-  return x == null ? INTERVALS["default"] : x;
+  if (!INTERVAL_REGEX.hasMatch(input)) {
+    throw new FormatException("Bad Interval Syntax: ${input}");
+  }
+
+  var match = INTERVAL_REGEX.firstMatch(input);
+  var multiplier = num.parse(match[1]);
+  var typeName = match[2];
+  var typeKey = TYPES.keys.firstWhere((x) => x.contains(typeName));
+  var type = TYPES[typeKey];
+  return (multiplier * type).round();
 }
 
-const INTERVALS = const <String, Duration>{
-  "none": const Duration(milliseconds: 0),
-  "default": const Duration(milliseconds: 0),
-  "oneYear": const Duration(days: 360),
-  "threeMonths": const Duration(days: 30 * 3),
-  "oneMonth": const Duration(days: 30),
-  "oneWeek": const Duration(days: 7),
-  "oneDay": const Duration(days: 1),
-  "tweleveHours": const Duration(hours: 12),
-  "sixHours": const Duration(hours: 6),
-  "threeHours": const Duration(hours: 3),
-  "twoHours": const Duration(hours: 2),
-  "oneHour": const Duration(hours: 1),
-  "thirtyMinutes": const Duration(minutes: 30),
-  "fifteenMinutes": const Duration(minutes: 15),
-  "tenMinutes": const Duration(minutes: 10),
-  "fiveMinutes": const Duration(minutes: 5),
-  "oneMinute": const Duration(minutes: 1),
-  "thirtySeconds": const Duration(seconds: 30),
-  "fifteenSeconds": const Duration(seconds: 15),
-  "tenSeconds": const Duration(seconds: 10),
-  "fiveSeconds": const Duration(seconds: 1)
-};
+main() {
+  print(parseInterval("1ms"));
+  print(parseInterval("10ms"));
+  print(parseInterval("15m"));
+  print(parseInterval("1d"));
+  print(parseInterval("2d"));
+  print(parseInterval("2.5d"));
+  print(parseInterval("2 days"));
+  print(parseInterval("1 millisecond"));
+}
