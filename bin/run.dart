@@ -144,12 +144,13 @@ class ProxyNodeProvider extends SimpleNodeProvider {
     if (node == null) {
       var mp = new Path(path);
 
-      if (mp.isRoot || mp.path == "/sys" || mp.path == "/defs") {
+      var cp = path.split("/").take(2).join("/");
+      if (mp.isRoot || mp.path == "/sys" || mp.path == "/defs" || !nodes.containsKey(cp)) {
         return super.getOrCreateNode(path, addToTree);
       }
 
       node = new ProxyNode(path, this);
-      SimpleNode pnode = getNode(mp.parentPath, addToTree);
+      SimpleNode pnode = getNode(mp.parentPath);
 
       if (pnode != null) {
         pnode.children[p.name] = node;
