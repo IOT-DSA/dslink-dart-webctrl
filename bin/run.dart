@@ -153,9 +153,9 @@ class ProxyNodeProvider extends SimpleNodeProvider {
       SimpleNode pnode = getNode(mp.parentPath);
 
       if (pnode != null) {
-        pnode.children[p.name] = node;
-        pnode.onChildAdded(p.name, node);
-        pnode.updateList(p.name);
+        pnode.children[mp.name] = node;
+        pnode.onChildAdded(mp.name, node);
+        pnode.updateList(mp.name);
       }
 
       if (addToTree) {
@@ -332,30 +332,12 @@ class ProxyNode extends SimpleNode {
     initialize(this is ConnectionNode ? this : null);
   }
 
-  BroadcastStreamController<String> _listChangeController;
-
-  BroadcastStreamController<String> get listChangeController {
-    if (_listChangeController == null) {
-      _listChangeController = new BroadcastStreamController<String>(
-          onStartListListen, _onAllListCancel);
-    }
-    return _listChangeController;
-  }
-
   void onStartListListen() {
     _listing = true;
     initialize();
   }
 
   bool _listing = false;
-
-  void _onAllListCancel() {
-    _listing = false;
-    listReady = false;
-  }
-
-  Stream<String> get listStream => listChangeController.stream;
-  StreamSubscription _listReqListener;
 
   bool initialized = false;
 
@@ -442,7 +424,7 @@ class ProxyNode extends SimpleNode {
       var prefix = path.split("/").take(2).join("/");
       for (var p in fullPaths) {
         var value = values[p];
-        ProxyNode node = link["${prefix}${p}"];
+        ProxyNode node = link.provider.getOrCreateNode("${prefix}${p}");
         if (value != null) {
           node.configs[r"$type"] = "dynamic";
           node.addHistoryAction();

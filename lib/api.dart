@@ -21,7 +21,6 @@ class WebCtrlClient {
       xmlData = (xmlData as XmlNode).toXmlString();
     }
 
-    print("REQ");
     var response = await client.post("${url}/${action}", headers: {
       "Authorization": "Basic ${auth}",
       "SOAPAction": "",
