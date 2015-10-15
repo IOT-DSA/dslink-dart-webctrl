@@ -16,6 +16,9 @@
     "name": {
       "type": "string",
       "default": "WebCtrl"
+    },
+    "token": {
+      "type": "string"
     }
   }
 }
