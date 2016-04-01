@@ -4,7 +4,6 @@ import "package:dslink_webctrl/api.dart";
 
 import "package:dslink/dslink.dart";
 import "package:dslink/nodes.dart";
-import "package:dslink/utils.dart" show BroadcastStreamController;
 
 LinkProvider link;
 
@@ -138,7 +137,7 @@ class ProxyNodeProvider extends SimpleNodeProvider {
   }
 
   @override
-  LocalNode getOrCreateNode(String path, [bool addToTree = true]) {
+  LocalNode getOrCreateNode(String path, [bool addToTree = true, bool init = true]) {
     var node = getNode(path);
 
     if (node == null) {
@@ -377,11 +376,15 @@ class ProxyNode extends SimpleNode {
   ConnectionNode myConn;
 
   void initialize([ConnectionNode conn]) {
+    if (path.startsWith("/defs/")) {
+      return;
+    }
+
     initialized = true;
 
     if (conn == null) {
       var p = path.split("/").take(2).join("/");
-      conn = link[p];
+      conn = link.getNode(p);
     }
 
     myConn = conn;
@@ -551,7 +554,12 @@ class ConnectionNode extends ProxyNode {
 
     super.onCreated();
 
-    client = new WebCtrlClient(get(r"$$webctrl_url"), get(r"$$webctrl_username"), get(r"$$webctrl_password"));
+    client = new WebCtrlClient(
+      get(r"$$webctrl_url"),
+      get(r"$$webctrl_username"),
+      get(r"$$webctrl_password")
+    );
+
     if (!initialized) {
       for (var c in children.keys) {
         removeChild(c);

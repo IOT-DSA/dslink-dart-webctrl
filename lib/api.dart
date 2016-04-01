@@ -1,17 +1,21 @@
 library webctrl.api;
 
 import "dart:async";
+import "dart:io";
 import "dart:convert";
 
 import "package:http/http.dart" as http;
 import "package:xml/xml.dart" hide parse;
 import "package:xml/xml.dart" as xml;
-import "package:crypto/crypto.dart" show CryptoUtils;
+import "package:crypto/crypto.dart" as Crypto;
 
 class WebCtrlClient {
   final String url;
   final String auth;
-  final http.Client client = new http.Client();
+  final http.Client client = new http.IOClient(
+    new HttpClient()
+      ..badCertificateCallback = (a, b, c) => true
+  );
 
   WebCtrlClient(this.url, String username, String password) :
     auth = _createBasicAuthorization(username, password);
@@ -231,7 +235,22 @@ int _realHour(int x) => ((x + 11) % 12 + 1);
 
 String formatWebCtrlDate(DateTime time) {
   if (time == null) return "";
-  return "${_gtn(time.month)}/${_gtn(time.day)}/${_gtn(time.year)} ${_realHour(time.hour)}:${_gtn(time.minute)}:${_gtn(time.second)} ${time.hour >= 12 ? "PM" : "AM"}";
+
+  return [
+    _gtn(time.month),
+    "/",
+    _gtn(time.day),
+    "/",
+    _gtn(time.year),
+    " ",
+    _realHour(time.hour),
+    ":",
+    _gtn(time.minute),
+    ":",
+    _gtn(time.second),
+    " ",
+    time.hour >= 12 ? "PM" : "AM"
+  ].join();
 }
 
 DateTime parseWebCtrlDate(String input) {
@@ -258,7 +277,7 @@ DateTime parseWebCtrlDate(String input) {
 }
 
 String _createBasicAuthorization(String username, String password) {
-  return CryptoUtils.bytesToBase64(UTF8.encode("${username}:${password}"));
+  return Crypto.BASE64.encode(UTF8.encode("${username}:${password}"));
 }
 
 final Map<dynamic, int> TYPES = {
