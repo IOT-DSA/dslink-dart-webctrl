@@ -7,7 +7,6 @@ import "dart:convert";
 import "package:http/http.dart" as http;
 import "package:xml/xml.dart" hide parse;
 import "package:xml/xml.dart" as xml;
-import "package:crypto/crypto.dart" as Crypto;
 
 class WebCtrlClient {
   final String url;
@@ -277,7 +276,7 @@ DateTime parseWebCtrlDate(String input) {
 }
 
 String _createBasicAuthorization(String username, String password) {
-  return Crypto.BASE64.encode(UTF8.encode("${username}:${password}"));
+  return BASE64.encode(UTF8.encode("${username}:${password}"));
 }
 
 final Map<dynamic, int> TYPES = {

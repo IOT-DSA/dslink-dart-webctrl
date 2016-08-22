@@ -432,6 +432,8 @@ class ProxyNode extends SimpleNode {
           node.configs[r"$type"] = "dynamic";
           node.addHistoryAction();
           node.updateValue(value);
+        } else if (p.toString().endsWith("_tn")) {
+          node.addHistoryAction();
         }
       }
     }).catchError((e, stack) {
@@ -520,7 +522,7 @@ class GetHistoryNode extends SimpleNode {
       }
 
       return list.map((it) => {
-        "ts": "${it[0].toIso8601String()}${ValueUpdate.TIME_ZONE}",
+        "timestamp": "${it[0].toIso8601String()}${ValueUpdate.TIME_ZONE}",
         "value": it[1]
       }).toList();
     } catch (e) {
