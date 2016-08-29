@@ -81,7 +81,17 @@ class WebCtrlClient {
       for (var i = 0; i < e.children.length; i += 2) {
         var lts = e.children[i].text;
         var lv = e.children[i + 1].text;
-        list.add([parseWebCtrlDate(lts), resolveStringValue(lv)]);
+        var date = parseWebCtrlDate(lts);
+
+        if (start != null && date.isBefore(start)) {
+          continue;
+        }
+
+        if (end != null && date.isAfter(end)) {
+          continue;
+        }
+
+        list.add([date, resolveStringValue(lv)]);
       }
       return list;
     } catch (e) {

@@ -461,6 +461,15 @@ class GetHistoryNode extends SimpleNode {
   @override
   onInvoke(Map<String, dynamic> params) async {
     String range = params["Timerange"];
+
+    if (range == null) {
+      range = params["TimeRange"];
+    }
+
+    if (range == null) {
+      range = params["timeRange"];
+    }
+
     Duration interval = parseIntervalDuration(params["Interval"]);
 
     DateTime start;
