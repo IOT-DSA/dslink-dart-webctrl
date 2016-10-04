@@ -431,7 +431,10 @@ class ProxyNode extends SimpleNode {
         if (value != null) {
           node.configs[r"$type"] = "dynamic";
           node.addHistoryAction();
-          node.updateValue(value);
+
+          if (value != null) {
+            node.updateValue(value);
+          }
         } else if (p.toString().endsWith("_tn")) {
           node.addHistoryAction();
         }
@@ -573,7 +576,7 @@ class ConnectionNode extends ProxyNode {
 
     if (!initialized) {
       for (var c in children.keys) {
-        removeChild(c);
+        provider.removeNode("${path}/${c}");
       }
       initialize(this);
     }
