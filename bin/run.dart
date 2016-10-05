@@ -297,6 +297,8 @@ class ProxyNode extends SimpleNode {
     if (callbacks.isNotEmpty) {
       updateFunctions.add(updateFunction);
     }
+
+    refresh();
   }
 
   void addSettableIfNotExists() {
