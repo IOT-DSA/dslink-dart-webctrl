@@ -416,7 +416,7 @@ class ProxyNode extends SimpleNode {
     }
 
     if (conn != this && conn.client == null) {
-      conn.initialize(conn);
+      conn.onCreated();
     }
 
     conn.client.getChildren(x).then((c) async {
