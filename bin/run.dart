@@ -101,7 +101,7 @@ main(List<String> args) async {
   startTimer();
 }
 
-Duration interval = new Duration(seconds: 1);
+Duration interval = new Duration(seconds: 5);
 
 void startTimer() {
   timer = new Timer.periodic(interval, (_) {
