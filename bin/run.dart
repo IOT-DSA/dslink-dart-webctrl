@@ -293,6 +293,10 @@ class ProxyNode extends SimpleNode {
         r"$columns": []
       });
     }
+
+    if (callbacks.isNotEmpty) {
+      updateFunctions.add(updateFunction);
+    }
   }
 
   void addSettableIfNotExists() {
@@ -320,13 +324,13 @@ class ProxyNode extends SimpleNode {
 
   void removeSettable() {
     if (children.containsKey("Set_Value")) {
-      removeChild("Set_Value");
+      link.removeNode("${path}/Set_Value");
     }
   }
 
   void refresh() {
-    for (var c in children.keys) {
-      removeChild(c);
+    for (var c in children.keys.toList()) {
+      link.removeNode("${path}/${c}");
     }
     initialize(this is ConnectionNode ? this : null);
   }
@@ -340,14 +344,11 @@ class ProxyNode extends SimpleNode {
 
   bool initialized = false;
 
-  int subscriberCount = 0;
-
   @override
   RespSubscribeListener subscribe(callback(ValueUpdate), [int cachelevel = 1]) {
     callbacks[callback] = cachelevel;
-    subscriberCount++;
 
-    if (subscriberCount == 1) {
+    if (hasSubscriber) {
       proxySubscribe();
     }
 
@@ -357,8 +358,7 @@ class ProxyNode extends SimpleNode {
   @override
   void unsubscribe(callback(ValueUpdate)) {
     super.unsubscribe(callback);
-    subscriberCount--;
-    if (subscriberCount == 0) {
+    if (!hasSubscriber) {
       proxyUnsubscribe();
     }
   }
