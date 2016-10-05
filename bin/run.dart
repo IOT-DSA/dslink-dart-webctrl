@@ -348,11 +348,11 @@ class ProxyNode extends SimpleNode {
 
   @override
   RespSubscribeListener subscribe(callback(ValueUpdate), [int cachelevel = 1]) {
-    callbacks[callback] = cachelevel;
-
-    if (hasSubscriber) {
+    if (!hasSubscriber) {
       proxySubscribe();
     }
+
+    callbacks[callback] = cachelevel;
 
     return new RespSubscribeListener(this, callback);
   }
