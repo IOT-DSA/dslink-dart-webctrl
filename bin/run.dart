@@ -506,6 +506,12 @@ class GetHistoryNode extends SimpleNode {
       x = x.substring(1);
     }
 
+    var rollupName = "last";
+
+    if (params["Rollup"] is String) {
+      rollupName = params["Rollup"];
+    }
+
     try {
       var results = await conn.client.getTrendData(x, start: start, end: end);
       var list = [];
@@ -513,9 +519,17 @@ class GetHistoryNode extends SimpleNode {
       int lastTimestamp = -1;
       int timestamp;
 
+      Rollup rollup = rollups[rollupName]();
+
+      if (rollup == null) {
+        rollup = new LastRollup();
+      }
+
       for (List<dynamic> x in results) {
         DateTime time = x[0];
         timestamp = time.millisecondsSinceEpoch;
+
+        rollup.add(x[1]);
 
         if ((lastTimestamp < 0) && (timestamp < lastTimestamp)) {
           continue;
@@ -527,15 +541,19 @@ class GetHistoryNode extends SimpleNode {
             continue;
           }
           lastTimestamp = timestamp;
-          list.add(x);
+          list.add([time, rollup.value]);
+          rollup.reset();
         } else {
-          list.add(x);
+          list.add([time, rollup.value]);
+          rollup.reset();
         }
       }
 
-      return list.map((it) => {
-        "timestamp": "${it[0].toIso8601String()}${ValueUpdate.TIME_ZONE}",
-        "value": it[1]
+      return list.map((x) {
+        return [
+          "${x[0].toIso8601String()}${ValueUpdate.TIME_ZONE}",
+          x[1]
+        ];
       }).toList();
     } catch (e) {
       return [];
