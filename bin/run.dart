@@ -415,6 +415,10 @@ class ProxyNode extends SimpleNode {
       x = "/";
     }
 
+    if (conn.client == null) {
+      conn.initialize(conn);
+    }
+
     conn.client.getChildren(x).then((c) async {
       var fullPaths = c.map((it) {
         var s = "${x == "/" ? "" : x}/${it}";
