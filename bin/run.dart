@@ -593,7 +593,7 @@ class ConnectionNode extends ProxyNode {
     );
 
     if (!initialized) {
-      for (var c in children.keys) {
+      for (var c in children.keys.toList()) {
         provider.removeNode("${path}/${c}");
       }
       initialize(this);
