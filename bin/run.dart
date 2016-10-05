@@ -149,7 +149,7 @@ class ProxyNodeProvider extends SimpleNodeProvider {
       }
 
       node = new ProxyNode(path, this);
-      SimpleNode pnode = getNode(mp.parentPath);
+      SimpleNode pnode = getOrCreateNode(mp.parentPath);
 
       if (pnode != null) {
         pnode.children[mp.name] = node;
@@ -593,9 +593,6 @@ class ConnectionNode extends ProxyNode {
     );
 
     if (!initialized) {
-      for (var c in children.keys) {
-        provider.removeNode("${path}/${c}");
-      }
       initialize(this);
     }
   }
