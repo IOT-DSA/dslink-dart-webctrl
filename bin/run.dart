@@ -415,7 +415,7 @@ class ProxyNode extends SimpleNode {
       x = "/";
     }
 
-    if (conn.client == null) {
+    if (conn != this && conn.client == null) {
       conn.initialize(conn);
     }
 
