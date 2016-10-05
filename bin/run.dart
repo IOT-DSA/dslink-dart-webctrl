@@ -523,7 +523,7 @@ class GetHistoryNode extends SimpleNode {
     var rollupName = "last";
 
     if (params["Rollup"] is String) {
-      rollupName = params["Rollup"];
+      rollupName = params["Rollup"].toString().toLowerCase();
     }
 
     try {
@@ -533,7 +533,7 @@ class GetHistoryNode extends SimpleNode {
       int lastTimestamp = -1;
       int timestamp;
 
-      Rollup rollup = rollups[rollupName]();
+      Rollup rollup = rollups[rollupName] != null ? rollups[rollupName]() : null;
 
       if (rollup == null) {
         rollup = new LastRollup();
