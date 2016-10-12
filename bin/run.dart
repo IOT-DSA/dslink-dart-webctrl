@@ -530,6 +530,10 @@ class GetHistoryNode extends SimpleNode {
       var results = await conn.client.getTrendData(x, start: start, end: end);
       var list = [];
 
+      results.sort((a, b) {
+        return a[0].compareTo(b[0]);
+      });
+
       int lastTimestamp = -1;
       int timestamp;
 
