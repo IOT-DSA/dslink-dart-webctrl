@@ -526,45 +526,54 @@ class GetHistoryNode extends SimpleNode {
       rollupName = params["Rollup"].toString().toLowerCase();
     }
 
+    var rollup = rollups[rollupName] == null ? new LastRollup() : rollups[rollupName]();
+
     try {
       var results = await conn.client.getTrendData(x, start: start, end: end);
       var list = [];
 
       results.sort((a, b) {
-        return a[0].compareTo(b[0]);
+        DateTime c = a[0];
+        DateTime d = b[0];
+        return c.compareTo(d);
       });
 
-      int lastTimestamp = -1;
-      int timestamp;
-
-      Rollup rollup = rollups[rollupName] != null ? rollups[rollupName]() : null;
-
-      if (rollup == null) {
-        rollup = new LastRollup();
+      if (interval.inMilliseconds <= 0) {
+        return results.map((x) {
+          return [
+            "${x[0].toIso8601String()}${ValueUpdate.TIME_ZONE}",
+            x[1]
+          ];
+        }).toList();
       }
 
-      for (List<dynamic> x in results) {
-        DateTime time = x[0];
-        timestamp = time.millisecondsSinceEpoch;
+      int lastTimestamp = -1;
+      int totalTime = 0;
 
-        rollup.add(x[1]);
+      List result;
 
-        if ((lastTimestamp < 0) && (timestamp < lastTimestamp)) {
-          continue;
+      for (List pair in results) {
+        rollup.add(pair[1]);
+        if (lastTimestamp != -1) {
+          totalTime += pair[0].millisecondsSinceEpoch - lastTimestamp;
         }
-
-        if (interval != null && interval.inMilliseconds != 0) {
-          var diff = timestamp - lastTimestamp;
-          if (diff < interval.inMilliseconds) {
-            continue;
-          }
-          lastTimestamp = timestamp;
-          list.add([time, rollup.value]);
-          rollup.reset();
-        } else {
-          list.add([time, rollup.value]);
+        lastTimestamp = pair[0].millisecondsSinceEpoch;
+        if (totalTime >= interval.inMilliseconds) {
+          totalTime = 0;
+          result = [
+              new DateTime.fromMillisecondsSinceEpoch(
+                  lastTimestamp
+              ),
+              rollup.value
+          ];
+          list.add(result);
+          result = null;
           rollup.reset();
         }
+      }
+
+      if (result != null) {
+        list.add(result);
       }
 
       return list.map((x) {
