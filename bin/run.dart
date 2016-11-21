@@ -111,7 +111,7 @@ void startTimer() {
   });
 }
 
-List<Function> updateFunctions = [];
+Set<Function> updateFunctions = new Set<Function>();
 
 class ProxyNodeProvider extends SimpleNodeProvider {
   ProxyNodeProvider([Map m, Map profiles]) : super(m, profiles);
@@ -338,16 +338,13 @@ class ProxyNode extends SimpleNode {
   }
 
   void onStartListListen() {
-    _listing = true;
     initialize();
   }
-
-  bool _listing = false;
 
   bool initialized = false;
 
   @override
-  RespSubscribeListener subscribe(callback(ValueUpdate), [int cachelevel = 1]) {
+  RespSubscribeListener subscribe(callback(ValueUpdate callback), [int cachelevel = 1]) {
     if (!hasSubscriber) {
       proxySubscribe();
     }
@@ -418,7 +415,6 @@ class ProxyNode extends SimpleNode {
     if (conn != this && conn.client == null) {
       conn.onCreated();
     }
-
 
     if (conn.client == null) {
       new Future.delayed(const Duration(seconds: 1), () {
@@ -601,7 +597,6 @@ class ConnectionNode extends ProxyNode {
 
   @override
   void onStartListListen() {
-    _listing = true;
     initialize(this);
   }
 
