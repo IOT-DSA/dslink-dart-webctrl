@@ -275,7 +275,7 @@ DateTime parseWebCtrlDate(String input) {
   var hour = int.parse(parts[3]);
   var minute = int.parse(parts[4]);
   var second = int.parse(parts[5]);
-  var suffix = parts[6];
+  var suffix = parts[6].toString().trim();
 
   return new DateTime(
     year,
