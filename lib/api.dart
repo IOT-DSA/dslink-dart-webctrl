@@ -275,13 +275,17 @@ DateTime parseWebCtrlDate(String input) {
   var hour = int.parse(parts[3]);
   var minute = int.parse(parts[4]);
   var second = int.parse(parts[5]);
-  var suffix = parts[6].toString().trim();
+  var suffix = parts[6].toString().trim().toUpperCase();
+
+  if (suffix == "PM" && hour < 13) {
+    hour += 12;
+  }
 
   return new DateTime(
     year,
     month,
     day,
-    suffix == "PM" ? (hour + 12) : hour,
+    hour,
     minute,
     second
   );
