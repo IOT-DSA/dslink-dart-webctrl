@@ -278,7 +278,7 @@ DateTime parseWebCtrlDate(String input) {
   var second = int.parse(parts[5]);
   var suffix = parts[6].toString().trim().toUpperCase();
 
-  if (!(suffix == "PM" && hour < 13)) {
+  if (suffix == "PM" && hour < 12) {
     hour += 12;
   }
 
@@ -506,4 +506,3 @@ final Map<String, RollupFactory> rollups = {
   "sum": () => new SumRollup(),
   "avg": () => new AvgRollup()
 };
-
