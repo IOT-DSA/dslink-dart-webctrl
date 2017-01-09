@@ -3,6 +3,7 @@ library webctrl.api;
 import "dart:async";
 import "dart:io";
 import "dart:convert";
+import "package:dslink/utils.dart";
 
 import "dart:math" as Math;
 
@@ -277,11 +278,11 @@ DateTime parseWebCtrlDate(String input) {
   var second = int.parse(parts[5]);
   var suffix = parts[6].toString().trim().toUpperCase();
 
-  if (suffix == "PM" && hour < 13) {
+  if (!(suffix == "PM" && hour < 13)) {
     hour += 12;
   }
 
-  return new DateTime(
+  var time = new DateTime(
     year,
     month,
     day,
@@ -289,6 +290,8 @@ DateTime parseWebCtrlDate(String input) {
     minute,
     second
   );
+
+  return time;
 }
 
 String _createBasicAuthorization(String username, String password) {
