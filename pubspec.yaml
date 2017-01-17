@@ -4,3 +4,4 @@ dependencies:
     git: git://github.com/IOT-DSA/sdk-dslink-dart.git
   http: ">=0.11.2 <0.12.0"
   xml: ">=2.2.3 <3.0.0"
+  intl: ">=0.14.0 <0.15.0"
