@@ -7,8 +7,8 @@ import 'proxy.dart';
 import '../client.dart';
 
 class CreateConnectionNode extends SimpleNode {
-  CreateConnectionNode(String path, this.link)
-      : super(path, link.provider);
+  CreateConnectionNode(String path, LinkProvider link)
+      : super(path, link.provider), this.link = link;
 
   final LinkProvider link;
 
