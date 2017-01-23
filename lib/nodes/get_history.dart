@@ -88,6 +88,9 @@ class GetHistoryNode extends SimpleNode {
         }).toList();
       }
 
+      if (iv == '1N') {
+        return byMonth(start, end, rollup, results);
+      }
 
       var st = start;
       var cutOff = start.add(interval);
@@ -138,5 +141,66 @@ class GetHistoryNode extends SimpleNode {
     } catch (e) {
       return [];
     }
+  }
+
+  List<List> byMonth(DateTime start, DateTime end, Rollup rollup, List<List> results) {
+    var st = new DateTime(start.year, start.month, 1);
+    DateTime getCutoff() {
+      if (st.month == 12) {
+        return new DateTime(st.year + 1, 1, 1);
+      } else {
+        return new DateTime(st.year, st.month + 1, 1);
+      }
+    }
+
+    var cutOff = getCutoff();
+    var dayDur = new Duration(days: 1);
+    var list = <List>[];
+
+    var i = 0;
+    bool remaining = false;
+    while (st.compareTo(end) != 1) {
+      // Iterator is beyond the results, but still not done timerange.
+      if (i >= results.length) {
+        list.add([cutOff.subtract(dayDur) , rollup.value]);
+        rollup.reset();
+
+        st = cutOff;
+        cutOff = getCutoff();
+        remaining = false;
+        continue;
+      }
+
+      var cur = results[i];
+      // This result is before the start range? (shouldn't happen)
+      if (cur[0].month < st.month) {
+        i++; // skip this result.
+        continue;
+      }
+
+      // Date is beyond cut off for interval.
+      if (cur[0].month >= cutOff.month) {
+        list.add([cutOff.subtract(dayDur), rollup.value]);
+        rollup.reset();
+        remaining = false;
+
+        st = cutOff;
+        cutOff = getCutoff();
+        continue;
+      }
+
+      rollup.add(cur[1]);
+      i++;
+      remaining = true;
+    }
+
+    if (remaining) {
+      list.add([cutOff, rollup.value]);
+    }
+
+    return list.map((x) {
+      return ["${x[0].toIso8601String()}${ValueUpdate.TIME_ZONE}", x[1]];
+    }).toList();
+
   }
 }
