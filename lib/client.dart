@@ -71,7 +71,7 @@ class WCClient {
 
   /// queryValues returns values associated with the path(s) specified.
   Future<Map<String, dynamic>> queryValues(Iterable<String> paths,
-      {bool retry = false}) async {
+      {bool retry: false}) async {
     var allPaths = paths.toList(growable: false);
     xml.XmlDocument doc;
     String resp;
