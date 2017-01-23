@@ -41,7 +41,7 @@ class WCClient {
   }
 
   /// getChildren returns a list of children nodes of the specified path.
-  Future<List<String>> getChildren(String path, {bool retry = false}) async {
+  Future<List<String>> getChildren(String path, {bool retry: false}) async {
     xml.XmlDocument doc;
     String resp;
     try {
