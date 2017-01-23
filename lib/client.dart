@@ -37,7 +37,7 @@ class WCClient {
     _root = _root.replace(userInfo: '$user:$pass');
     _client = new http.IOClient(tmp);
 
-    df = new DateFormat.yMd().add_jms();
+    df = new DateFormat('MM/dd/yyyy h:mm:ss a');
   }
 
   /// getChildren returns a list of children nodes of the specified path.
