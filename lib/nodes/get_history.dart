@@ -30,6 +30,8 @@ class GetHistoryNode extends SimpleNode {
 
   @override
   onInvoke(Map<String, dynamic> params) async {
+    print('Params: ${params}');
+
     String range = params[_timeRange];
     range ??= params["TimeRange"];
     range ??= params["timeRange"];
@@ -135,8 +137,9 @@ class GetHistoryNode extends SimpleNode {
         list.add([cutOff, rollup.value]);
       }
 
+      print('Returning: $list');
       return list.map((x) {
-        return ["${x[0].toIso8601String()}${ValueUpdate.TIME_ZONE}", x[1]];
+        return ["${x[0].toIso8601String()}"/*${ValueUpdate.TIME_ZONE}"*/, x[1]];
       }).toList();
     } catch (e) {
       return [];
@@ -199,7 +202,7 @@ class GetHistoryNode extends SimpleNode {
     }
 
     return list.map((x) {
-      return ["${x[0].toIso8601String()}${ValueUpdate.TIME_ZONE}", x[1]];
+      return ["${x[0].toIso8601String()}"/*${ValueUpdate.TIME_ZONE}"*/, x[1]];
     }).toList();
 
   }
