@@ -84,7 +84,7 @@ class GetHistoryNode extends SimpleNode {
 
       if (interval.inMilliseconds <= 0) {
         return results.map((x) {
-          return ["${x[0].toIso8601String()}${ValueUpdate.TIME_ZONE}", x[1]];
+          return ["${x[0].toIso8601String()}"/*${ValueUpdate.TIME_ZONE}"*/, x[1]];
         }).toList();
       }
 
