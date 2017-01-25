@@ -31,6 +31,24 @@ class ProxyNode extends SimpleNode {
   }
 
   WCClient _client;
+  bool _refreshing = false;
+
+  String get remotePath {
+    var x = path.split("/").skip(2).join("/");
+    x = "/${x}";
+    if (!x.startsWith("/")) {
+      x = "/${x}";
+    }
+
+    if (x.endsWith("/")) {
+      x = x.substring(0, x.length - 1);
+    }
+
+    if (x == "") {
+      x = "/";
+    }
+    return x;
+  }
 
   Future<WCClient> getClient() async {
     if (_client != null) return _client;
@@ -50,21 +68,7 @@ class ProxyNode extends SimpleNode {
         return;
       }
 
-      var x = path.split("/").skip(2).join("/");
-
-      x = "/${x}";
-
-      if (!x.startsWith("/")) {
-        x = "/${x}";
-      }
-
-      if (x.endsWith("/")) {
-        x = x.substring(0, x.length - 1);
-      }
-
-      if (x == "") {
-        x = "/";
-      }
+      var x = remotePath;
 
       cl.queryValue(x).then((value) {
         if (value != null) {
@@ -94,7 +98,6 @@ class ProxyNode extends SimpleNode {
       updateFunctions.add(updateFunction);
     }
 
-//    refresh();
   }
 
   void addSettableIfNotExists() {
@@ -127,10 +130,12 @@ class ProxyNode extends SimpleNode {
   }
 
   void refresh() {
+    if (_refreshing) return;
     for (var c in children.keys.toList()) {
       provider.removeNode("${path}/${c}");
     }
     initialized = false;
+    _refreshing = true;
     initialize(_client);
   }
 
@@ -142,7 +147,8 @@ class ProxyNode extends SimpleNode {
   bool initialized = false;
 
   @override
-  RespSubscribeListener subscribe(callback(ValueUpdate callback), [int cachelevel = 1]) {
+  RespSubscribeListener subscribe(callback(ValueUpdate callback), [int cachelevel = 0]) {
+    onSubscribe();
     if (!hasSubscriber) {
       proxySubscribe();
     }
@@ -154,6 +160,7 @@ class ProxyNode extends SimpleNode {
 
   @override
   void unsubscribe(callback(ValueUpdate)) {
+    onUnsubscribe();
     super.unsubscribe(callback);
     if (!hasSubscriber) {
       proxyUnsubscribe();
@@ -184,16 +191,7 @@ class ProxyNode extends SimpleNode {
       return;
     }
 
-    var x = path.split("/").skip(2).join("/");
-    x = "/$x";
-
-    if (x.length > 1 && x.endsWith("/")) {
-      x = x.substring(0, x.length - 1);
-    }
-
-    if (x.startsWith("//")) {
-      x = x.substring(1);
-    }
+    var x = remotePath;
 
     initialized = true;
     _client.getChildren(x).then((List<String> c) async {
@@ -222,7 +220,9 @@ class ProxyNode extends SimpleNode {
           node.addHistoryAction();
         }
       }
+      _refreshing = false;
     }).catchError((e, stack) {
+      _refreshing = false;
       logger.warning('Error getting children', e, stack);
     });
   }

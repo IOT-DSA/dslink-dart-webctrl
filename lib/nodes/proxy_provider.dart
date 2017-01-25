@@ -11,8 +11,15 @@ class ProxyNodeProvider extends SimpleNodeProvider {
     var connections = nodes.values.where((it) => it is ConnectionHandle).toList();
     var c = connections.firstWhere((it) => path.startsWith(it.path), orElse: () => null);
 
-    if (c == null || ["Get_Value", "Set_Value", "getHistory"].any((it) => path.endsWith(it))) {
+    if (c == null || path.endsWith('Get_Value') || path.endsWith('Set_value')) {
       return super.getNode(path);
+    } else if (path.endsWith('getHistory')) {
+      var nd = super.getNode(path);
+      if (nd != null) return nd;
+
+      var p = new Path(path);
+      var pNd = getOrCreateNode(p.parentPath) as ProxyNode;
+      pNd.addHistoryAction();
     }
 
     if (path.indexOf("/") == path.lastIndexOf("/")) {
