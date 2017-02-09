@@ -94,12 +94,13 @@ class GetHistoryNode extends SimpleNode {
 
       var st = start;
       var cutOff = start.add(interval);
+      var secDur = new Duration(seconds: 1);
       var remaining = false;
       var i = 0;
       while (st.compareTo(end) != 1) {
         // Iterator is beyond the results, but still not done timerange.
         if (i >= results.length) {
-          list.add([cutOff, rollup.value]);
+          list.add([cutOff.subtract(secDur), rollup.value]);
           rollup.reset();
 
           st = cutOff;
@@ -117,7 +118,7 @@ class GetHistoryNode extends SimpleNode {
 
         // Date is beyond cut off for interval.
         if (cutOff.compareTo(cur[0]) == -1) {
-          list.add([cutOff, rollup.value]);
+          list.add([cutOff.subtract(secDur), rollup.value]);
           rollup.reset();
           remaining = false;
 
