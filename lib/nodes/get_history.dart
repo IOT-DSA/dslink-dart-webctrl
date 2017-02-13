@@ -76,6 +76,10 @@ class GetHistoryNode extends SimpleNode {
           await cl.getTrendData(x, start: start, end: end, maxRecords: reqNum);
       var list = [];
 
+      if (results == null) {
+        throw "Error retreiving results";
+      }
+
       results.sort((a, b) {
         DateTime c = a[0];
         DateTime d = b[0];
@@ -140,7 +144,7 @@ class GetHistoryNode extends SimpleNode {
         return ["${x[0].toIso8601String()}"/*${ValueUpdate.TIME_ZONE}"*/, x[1]];
       }).toList();
     } catch (e) {
-      return [];
+      throw "Error loading results";
     }
   }
 
