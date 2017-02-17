@@ -45,7 +45,7 @@ class GetHistoryNode extends SimpleNode {
       start = DateTime.parse(l[0]);
       end = DateTime.parse(l[1]);
       var dur = end.difference(start);
-      reqNum = (dur.inHours * 12) + 10;
+      reqNum = dur.inHours + 10;
     }
 
     var x = parent.path.split("/").skip(2).join("/");
@@ -178,13 +178,13 @@ class GetHistoryNode extends SimpleNode {
 
       var cur = results[i];
       // This result is before the start range? (shouldn't happen)
-      if (cur[0].month < st.month && cur[0].year <= st.year) {
+      if (cur[0].month < st.month) {
         i++; // skip this result.
         continue;
       }
 
       // Date is beyond cut off for interval.
-      if (cur[0].month >= cutOff.month && cur[0].year >= cutOff.year) {
+      if (cur[0].month >= cutOff.month) {
         list.add([cutOff.subtract(dayDur), rollup.value]);
         rollup.reset();
         remaining = false;
