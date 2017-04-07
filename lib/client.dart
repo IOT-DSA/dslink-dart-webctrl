@@ -24,7 +24,7 @@ class WCClient {
     'Content-Type': 'text/xml; charset=utf-8',
   };
 
-  WCClient(this._root, this.user, this.pass) {
+  WCClient(this._root, String username, String password) {
     _queue = new Queue<ValueRequest>();
     var tmp = new HttpClient();
 //    var cred = new HttpClientBasicCredentials(user, pass);
@@ -34,6 +34,8 @@ class WCClient {
 //    };
     tmp.badCertificateCallback = (a, b, c) => true;
     tmp.maxConnectionsPerHost = 100;
+    pass = Uri.encodeComponent(password);
+    user = Uri.encodeComponent(username);
     _root = _root.replace(userInfo: '$user:$pass');
     _client = new http.IOClient(tmp);
 
